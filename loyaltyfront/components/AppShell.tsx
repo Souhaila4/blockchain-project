@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "./Header";
+import { Mascot } from "./Mascot";
 import { ProfileProvider } from "./ProfileProvider";
 import { MobileNav, Sidebar } from "./Sidebar";
 import { useWallet } from "./WalletProvider";
@@ -21,7 +22,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!account) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-sm text-white/60">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 text-sm text-white/60">
+        <Mascot mood="sleepy" className="h-24 w-24" />
         {ready ? "Redirecting…" : "Loading…"}
       </div>
     );

@@ -6,7 +6,7 @@ import { getHoldings, type Holding } from "@/lib/contracts";
 import { formatPoints } from "@/lib/format";
 import { ChevronRightIcon } from "./icons";
 import { useProfile } from "./ProfileProvider";
-import { Card, LoadState } from "./ui";
+import { Card, EmptyState, LoadState } from "./ui";
 import { useLoad } from "./useLoad";
 
 /** The tokens this wallet holds and has spent. Spending happens on a restaurant's page, as a reward. */
@@ -32,12 +32,16 @@ export function TokensPanel() {
 function HoldingList({ holdings }: { holdings: Holding[] }) {
   if (holdings.length === 0) {
     return (
-      <div className="space-y-3 text-sm text-white/60">
-        <p>You have no points yet. You earn points every time you buy from a restaurant.</p>
-        <Link href="/restaurants" className="text-[#F07340] hover:underline">
-          Browse restaurants
-        </Link>
-      </div>
+      <EmptyState
+        mood="wink"
+        action={
+          <Link href="/restaurants" className="text-sm text-[#F07340] hover:underline">
+            Browse restaurants
+          </Link>
+        }
+      >
+        You have no points yet. You earn points every time you buy from a restaurant.
+      </EmptyState>
     );
   }
 

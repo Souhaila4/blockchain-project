@@ -6,7 +6,7 @@ import { describeTransactionError } from "@/lib/errors";
 import { formatPoints } from "@/lib/format";
 import { addReward, updateReward, UNLIMITED_STOCK, type RewardOffer } from "@/lib/market";
 import { parsePointsAmount, parseReward, parseStock } from "@/lib/validation";
-import { ActionButton, Field, FormMessage, SubmitButton } from "./ui";
+import { ActionButton, EmptyState, Field, FormMessage, SubmitButton } from "./ui";
 import { useAction } from "./useAction";
 
 /** What a customer can get for points, for example a free coffee, and how many points it takes. */
@@ -22,7 +22,7 @@ export function RewardEditor({
   return (
     <div className="space-y-5">
       {rewards.length === 0 ? (
-        <p className="text-sm text-white/60">You have no rewards yet. Add the first one below.</p>
+        <EmptyState mood="cheer">You have no rewards yet. Add the first one below.</EmptyState>
       ) : (
         <ul className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07]">
           {rewards.map((reward) => (

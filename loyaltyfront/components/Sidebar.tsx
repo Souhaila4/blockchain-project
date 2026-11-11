@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { script } from "@/lib/fonts";
 import {
-  ChainMark,
   GiftIcon,
   HistoryIcon,
   HomeIcon,
@@ -15,6 +14,7 @@ import {
   UsersIcon,
 } from "./icons";
 import { IdentityCard } from "./Identity";
+import { Mascot } from "./Mascot";
 import { useProfile, type Role } from "./ProfileProvider";
 
 type NavItem = {
@@ -58,10 +58,28 @@ function isCurrent(pathname: string, href: string) {
 
 function Brand() {
   return (
-    <Link href="/menu" className="flex items-center gap-2.5 rounded-md">
-      <ChainMark className="h-8 w-10" />
+    <Link href="/menu" className="group flex items-center gap-2 rounded-md">
+      <Mascot className="h-11 w-11 transition-transform duration-300 group-hover:rotate-6" animated={false} />
       <span className={`${script.className} text-[1.7rem] leading-none text-white`}>LoyalChain</span>
     </Link>
+  );
+}
+
+const TIPS: Record<Role, string> = {
+  owner: "Add rewards to your menu, then mark claims as handed over.",
+  customer: "Every purchase earns points. Spend them on rewards!",
+};
+
+/** Lio with a one-line hint that fits the role. */
+function LioTip() {
+  const { role } = useProfile();
+  return (
+    <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-[#F07340]/20 bg-[#F07340]/[0.07] p-2.5">
+      <Mascot mood="wink" className="h-12 w-12 shrink-0" />
+      <p className="text-xs leading-snug text-white/70">
+        <span className="font-medium text-[#FFB07A]">Lio says:</span> {TIPS[role]}
+      </p>
+    </div>
   );
 }
 
@@ -87,7 +105,7 @@ export function Sidebar() {
                   aria-current={current ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm transition-colors motion-reduce:transition-none ${
                     current
-                      ? "border-[#F07340]/30 bg-gradient-to-r from-[#F07340]/25 to-[#F07340]/5 text-white"
+                      ? "border-[#F07340]/30 bg-gradient-to-r from-[#F07340]/25 to-[#F07340]/5 text-white shadow-[0_0_24px_-8px_rgba(240,115,64,0.6)]"
                       : "border-transparent text-white/65 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -100,6 +118,7 @@ export function Sidebar() {
         </ul>
       </nav>
 
+      <LioTip />
       <IdentityCard />
     </aside>
   );

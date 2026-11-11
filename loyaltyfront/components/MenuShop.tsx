@@ -5,7 +5,7 @@ import type { Restaurant } from "@/lib/contracts";
 import { describeTransactionError } from "@/lib/errors";
 import { formatMoney, formatPoints, plusPoints } from "@/lib/format";
 import { purchaseItem, type MenuItem } from "@/lib/market";
-import { ActionButton, FormMessage } from "./ui";
+import { ActionButton, EmptyState, FormMessage } from "./ui";
 import { useAction } from "./useAction";
 
 const MAX_QUANTITY = 10;
@@ -26,7 +26,7 @@ export function MenuShop({
   const available = items.filter((item) => item.isActive);
 
   if (available.length === 0) {
-    return <p className="text-sm text-white/60">This restaurant has not put anything on its menu yet.</p>;
+    return <EmptyState mood="sleepy">This restaurant has not put anything on its menu yet.</EmptyState>;
   }
 
   return (

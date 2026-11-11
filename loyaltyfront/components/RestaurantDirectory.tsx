@@ -6,13 +6,14 @@ import { shortAddress } from "@/lib/format";
 import { Avatar } from "./Avatar";
 import { ChevronRightIcon, PinIcon } from "./icons";
 import { useProfile } from "./ProfileProvider";
+import { EmptyState } from "./ui";
 
 /** Every restaurant on the registry. Each card opens that restaurant's menu and rewards. */
 export function RestaurantDirectory() {
   const { account, restaurants } = useProfile();
 
   if (restaurants.length === 0) {
-    return <p className="text-sm text-white/60">No restaurant has been created yet.</p>;
+    return <EmptyState mood="think">No restaurant has been created yet.</EmptyState>;
   }
 
   return (

@@ -11,7 +11,7 @@ import {
   getRewards,
   type Claim,
 } from "@/lib/market";
-import { ActionButton, FormMessage, LoadState } from "./ui";
+import { ActionButton, EmptyState, FormMessage, LoadState } from "./ui";
 import { useAction } from "./useAction";
 import { useLoad } from "./useLoad";
 
@@ -37,7 +37,7 @@ export function ClaimsPanel({ role, address }: { role: "owner" | "customer"; add
     <div className="space-y-3">
       <LoadState loading={loading} error={error} />
       {data && data.claims.length === 0 ? (
-        <p className="text-sm text-white/60">No claims yet.</p>
+        <EmptyState mood="sleepy">No claims yet.</EmptyState>
       ) : null}
       {data && data.claims.length > 0 ? (
         <ul className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07]">

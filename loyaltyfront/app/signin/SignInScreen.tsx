@@ -1,6 +1,6 @@
 import { Backdrop } from "@/components/Backdrop";
 import { ConnectButton } from "@/components/ConnectButton";
-import { ChainMark } from "@/components/icons";
+import { Mascot } from "@/components/Mascot";
 import { script } from "@/lib/fonts";
 
 export default function SignInScreen() {
@@ -10,7 +10,7 @@ export default function SignInScreen() {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-5">
         <header className="flex w-full shrink-0 flex-col items-center pt-12 text-center sm:pt-16">
-          <ChainMark className="h-[52px] w-[86px] drop-shadow-[0_8px_18px_rgba(0,0,0,0.4)]" />
+          <Mascot mood="cheer" title="Lio, the LoyalChain mascot" className="h-36 w-36 drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)] sm:h-40 sm:w-40" />
           <h1
             className={`${script.className} mt-1 text-[4.35rem] leading-none tracking-wide text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.55)] sm:text-[4.7rem]`}
           >

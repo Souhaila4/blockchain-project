@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { script } from "@/lib/fonts";
-import { menuItemClass } from "./ui";
 import { useWallet } from "./WalletProvider";
 
 /** The only action on the home page. Once a wallet is connected, the visitor goes to the main menu. */
@@ -26,7 +25,7 @@ export function ConnectButton() {
         onClick={() => void connect()}
         disabled={!ready || connecting}
         aria-busy={connecting}
-        className={`${script.className} ${menuItemClass}`}
+        className={`${script.className} cursor-pointer rounded-full border border-[#F07340]/50 bg-[#F07340]/15 px-9 py-3 text-[1.7rem] leading-none text-white shadow-[0_10px_30px_-8px_rgba(240,115,64,0.6)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:bg-[#F07340]/30 hover:shadow-[0_14px_36px_-8px_rgba(240,115,64,0.85)] disabled:cursor-wait disabled:opacity-70 motion-reduce:transition-none`}
       >
         {connecting ? "Connecting…" : "Connect to MetaMask"}
       </button>

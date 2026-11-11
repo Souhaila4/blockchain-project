@@ -1,6 +1,7 @@
 import type { Activity } from "@/lib/activity";
 import { formatDateTime, formatMoney, formatPoints, shortAddress } from "@/lib/format";
 import { Avatar } from "./Avatar";
+import { EmptyState } from "./ui";
 
 type ActivityTableProps = {
   activities: Activity[];
@@ -13,7 +14,7 @@ const headerClass = "px-3 py-2.5 text-left text-xs font-normal text-white/45";
 const cellClass = "px-3 py-3 text-sm";
 
 export function ActivityTable({ activities, perspective, emptyText }: ActivityTableProps) {
-  if (activities.length === 0) return <p className="text-sm text-white/60">{emptyText}</p>;
+  if (activities.length === 0) return <EmptyState mood="wink">{emptyText}</EmptyState>;
 
   return (
     <div className="overflow-x-auto rounded-xl border border-white/[0.07]">

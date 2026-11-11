@@ -5,7 +5,7 @@ import type { Holding, Restaurant } from "@/lib/contracts";
 import { describeTransactionError } from "@/lib/errors";
 import { formatPoints } from "@/lib/format";
 import { claimReward, UNLIMITED_STOCK, type RewardOffer } from "@/lib/market";
-import { ActionButton, FormMessage, SelectField } from "./ui";
+import { ActionButton, EmptyState, FormMessage, SelectField } from "./ui";
 import { useAction } from "./useAction";
 
 /**
@@ -30,7 +30,7 @@ export function RewardShop({
 
   const available = rewards.filter((reward) => reward.isActive);
   if (available.length === 0) {
-    return <p className="text-sm text-white/60">This restaurant has no rewards yet.</p>;
+    return <EmptyState mood="think">This restaurant has no rewards yet.</EmptyState>;
   }
 
   // Prefer the restaurant's own token, then the first one the customer holds.
