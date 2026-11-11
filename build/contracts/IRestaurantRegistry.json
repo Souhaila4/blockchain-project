@@ -1,0 +1,487 @@
+{
+  "contractName": "IRestaurantRegistry",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "restaurantAddress",
+          "type": "address"
+        }
+      ],
+      "name": "tokenOf",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "restaurantAddress",
+          "type": "address"
+        }
+      ],
+      "name": "isAuthorizedRestaurant",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "restaurantAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "acceptsToken",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"restaurantAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"acceptsToken\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"restaurantAddress\",\"type\":\"address\"}],\"name\":\"isAuthorizedRestaurant\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"restaurantAddress\",\"type\":\"address\"}],\"name\":\"tokenOf\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"acceptsToken(address,address)\":{\"notice\":\"True when `restaurantAddress` is active and currently accepts `token` as payment.\"},\"isAuthorizedRestaurant(address)\":{\"notice\":\"True when `restaurantAddress` is registered and active.\"},\"tokenOf(address)\":{\"notice\":\"The token of `restaurantAddress` and whether it is active. The token is zero when not registered.\"}},\"notice\":\"What the market needs to know from the registry that created it.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IRestaurantRegistry.sol\":\"IRestaurantRegistry\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IRestaurantRegistry.sol\":{\"keccak256\":\"0xb40b70714c660d0d9297611575be5073d36f91dfed58e4ed4bbb67527ae7fb5c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://eb49e6f6e75585a09bf07e39806eecd9fcb89a8baad74304263890fccc69d107\",\"dweb:/ipfs/QmcnKhNN5mSeoJ4x88QnBvz3KEkZKgMhQc9WwSYpu5Kjkt\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.20;\n\n/// @notice What the market needs to know from the registry that created it.\ninterface IRestaurantRegistry {\n    /// @notice The token of `restaurantAddress` and whether it is active. The token is zero when not registered.\n    function tokenOf(address restaurantAddress) external view returns (address token, bool isActive);\n\n    /// @notice True when `restaurantAddress` is registered and active.\n    function isAuthorizedRestaurant(address restaurantAddress) external view returns (bool);\n\n    /// @notice True when `restaurantAddress` is active and currently accepts `token` as payment.\n    function acceptsToken(address restaurantAddress, address token) external view returns (bool);\n}\n",
+  "sourcePath": "/Users/sayariamin/Desktop/loyalchain/contracts/interfaces/IRestaurantRegistry.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/interfaces/IRestaurantRegistry.sol",
+    "exportedSymbols": {
+      "IRestaurantRegistry": [
+        2482
+      ]
+    },
+    "id": 2483,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2452,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".20"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:23:9"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IRestaurantRegistry",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 2453,
+          "nodeType": "StructuredDocumentation",
+          "src": "57:77:9",
+          "text": "@notice What the market needs to know from the registry that created it."
+        },
+        "fullyImplemented": false,
+        "id": 2482,
+        "linearizedBaseContracts": [
+          2482
+        ],
+        "name": "IRestaurantRegistry",
+        "nameLocation": "144:19:9",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 2454,
+              "nodeType": "StructuredDocumentation",
+              "src": "170:109:9",
+              "text": "@notice The token of `restaurantAddress` and whether it is active. The token is zero when not registered."
+            },
+            "functionSelector": "42ec38e2",
+            "id": 2463,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "tokenOf",
+            "nameLocation": "293:7:9",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2457,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2456,
+                  "mutability": "mutable",
+                  "name": "restaurantAddress",
+                  "nameLocation": "309:17:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2463,
+                  "src": "301:25:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2455,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "301:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "300:27:9"
+            },
+            "returnParameters": {
+              "id": 2462,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2459,
+                  "mutability": "mutable",
+                  "name": "token",
+                  "nameLocation": "359:5:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2463,
+                  "src": "351:13:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2458,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "351:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2461,
+                  "mutability": "mutable",
+                  "name": "isActive",
+                  "nameLocation": "371:8:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2463,
+                  "src": "366:13:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 2460,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "366:4:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "350:30:9"
+            },
+            "scope": 2482,
+            "src": "284:97:9",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 2464,
+              "nodeType": "StructuredDocumentation",
+              "src": "387:67:9",
+              "text": "@notice True when `restaurantAddress` is registered and active."
+            },
+            "functionSelector": "9463edb4",
+            "id": 2471,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "isAuthorizedRestaurant",
+            "nameLocation": "468:22:9",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2467,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2466,
+                  "mutability": "mutable",
+                  "name": "restaurantAddress",
+                  "nameLocation": "499:17:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2471,
+                  "src": "491:25:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2465,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "491:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "490:27:9"
+            },
+            "returnParameters": {
+              "id": 2470,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2469,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2471,
+                  "src": "541:4:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 2468,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "541:4:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "540:6:9"
+            },
+            "scope": 2482,
+            "src": "459:88:9",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 2472,
+              "nodeType": "StructuredDocumentation",
+              "src": "553:93:9",
+              "text": "@notice True when `restaurantAddress` is active and currently accepts `token` as payment."
+            },
+            "functionSelector": "22b32831",
+            "id": 2481,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "acceptsToken",
+            "nameLocation": "660:12:9",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2477,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2474,
+                  "mutability": "mutable",
+                  "name": "restaurantAddress",
+                  "nameLocation": "681:17:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2481,
+                  "src": "673:25:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2473,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "673:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2476,
+                  "mutability": "mutable",
+                  "name": "token",
+                  "nameLocation": "708:5:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2481,
+                  "src": "700:13:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2475,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "700:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "672:42:9"
+            },
+            "returnParameters": {
+              "id": 2480,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2479,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2481,
+                  "src": "738:4:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 2478,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "738:4:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "737:6:9"
+            },
+            "scope": 2482,
+            "src": "651:93:9",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 2483,
+        "src": "134:612:9",
+        "usedErrors": [],
+        "usedEvents": []
+      }
+    ],
+    "src": "32:715:9"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.20+commit.a1b79de6.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.16",
+  "updatedAt": "2026-11-11T12:12:05.865Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "acceptsToken(address,address)": {
+        "notice": "True when `restaurantAddress` is active and currently accepts `token` as payment."
+      },
+      "isAuthorizedRestaurant(address)": {
+        "notice": "True when `restaurantAddress` is registered and active."
+      },
+      "tokenOf(address)": {
+        "notice": "The token of `restaurantAddress` and whether it is active. The token is zero when not registered."
+      }
+    },
+    "notice": "What the market needs to know from the registry that created it.",
+    "version": 1
+  }
+}

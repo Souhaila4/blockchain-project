@@ -1,0 +1,338 @@
+{
+  "contractName": "IRestaurantToken",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "points",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "customer",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "atRestaurant",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "points",
+          "type": "uint256"
+        }
+      ],
+      "name": "redeem",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"points\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"customer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"atRestaurant\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"points\",\"type\":\"uint256\"}],\"name\":\"redeem\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"mint(address,uint256)\":{\"notice\":\"Creates `points` for `to`.\"},\"redeem(address,address,uint256)\":{\"notice\":\"Burns `points` of `customer`, spent at `atRestaurant`.\"}},\"notice\":\"What the market can do to a restaurant token. Only the market is allowed to call these.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IRestaurantToken.sol\":\"IRestaurantToken\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IRestaurantToken.sol\":{\"keccak256\":\"0xae066e16a8714c7bd93ed1a1728ca79349fc48f038027a67f24e3afde91e1799\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f9a94f871f0b08dc602e352a4eb04cf6ca851a15dfafdc398f717b304391ae2a\",\"dweb:/ipfs/QmaTbLvqvPkTuHe7HD9x8Cs4swmfUeb7VH7sS57axUdDx4\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.20;\n\n/// @notice What the market can do to a restaurant token. Only the market is allowed to call these.\ninterface IRestaurantToken {\n    /// @notice Creates `points` for `to`.\n    function mint(address to, uint256 points) external;\n\n    /// @notice Burns `points` of `customer`, spent at `atRestaurant`.\n    function redeem(address customer, address atRestaurant, uint256 points) external;\n}\n",
+  "sourcePath": "/Users/sayariamin/Desktop/loyalchain/contracts/interfaces/IRestaurantToken.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/interfaces/IRestaurantToken.sol",
+    "exportedSymbols": {
+      "IRestaurantToken": [
+        2504
+      ]
+    },
+    "id": 2505,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2484,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".20"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:23:10"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IRestaurantToken",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 2485,
+          "nodeType": "StructuredDocumentation",
+          "src": "57:100:10",
+          "text": "@notice What the market can do to a restaurant token. Only the market is allowed to call these."
+        },
+        "fullyImplemented": false,
+        "id": 2504,
+        "linearizedBaseContracts": [
+          2504
+        ],
+        "name": "IRestaurantToken",
+        "nameLocation": "167:16:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 2486,
+              "nodeType": "StructuredDocumentation",
+              "src": "190:38:10",
+              "text": "@notice Creates `points` for `to`."
+            },
+            "functionSelector": "40c10f19",
+            "id": 2493,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "mint",
+            "nameLocation": "242:4:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2491,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2488,
+                  "mutability": "mutable",
+                  "name": "to",
+                  "nameLocation": "255:2:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2493,
+                  "src": "247:10:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2487,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "247:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2490,
+                  "mutability": "mutable",
+                  "name": "points",
+                  "nameLocation": "267:6:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2493,
+                  "src": "259:14:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2489,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "259:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "246:28:10"
+            },
+            "returnParameters": {
+              "id": 2492,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "283:0:10"
+            },
+            "scope": 2504,
+            "src": "233:51:10",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 2494,
+              "nodeType": "StructuredDocumentation",
+              "src": "290:66:10",
+              "text": "@notice Burns `points` of `customer`, spent at `atRestaurant`."
+            },
+            "functionSelector": "0e6dfcd5",
+            "id": 2503,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "redeem",
+            "nameLocation": "370:6:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2501,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2496,
+                  "mutability": "mutable",
+                  "name": "customer",
+                  "nameLocation": "385:8:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2503,
+                  "src": "377:16:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2495,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "377:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2498,
+                  "mutability": "mutable",
+                  "name": "atRestaurant",
+                  "nameLocation": "403:12:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2503,
+                  "src": "395:20:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2497,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "395:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2500,
+                  "mutability": "mutable",
+                  "name": "points",
+                  "nameLocation": "425:6:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2503,
+                  "src": "417:14:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2499,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "417:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "376:56:10"
+            },
+            "returnParameters": {
+              "id": 2502,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "441:0:10"
+            },
+            "scope": 2504,
+            "src": "361:81:10",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 2505,
+        "src": "157:287:10",
+        "usedErrors": [],
+        "usedEvents": []
+      }
+    ],
+    "src": "32:413:10"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.20+commit.a1b79de6.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.16",
+  "updatedAt": "2026-11-11T12:12:05.865Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "mint(address,uint256)": {
+        "notice": "Creates `points` for `to`."
+      },
+      "redeem(address,address,uint256)": {
+        "notice": "Burns `points` of `customer`, spent at `atRestaurant`."
+      }
+    },
+    "notice": "What the market can do to a restaurant token. Only the market is allowed to call these.",
+    "version": 1
+  }
+}

@@ -1,0 +1,254 @@
+LATEST DECISION: MENUS, PURCHASES AND REWARDS (read this first, it replaces the "send points" idea)
+
+What changed in one sentence
+Restaurants no longer send points to chosen wallets. Each restaurant publishes a MENU (item, price, points earned) and a list of REWARDS (free coffee, sandwich..., points needed). A customer BUYS an item with the wallet, the money goes to the restaurant, and the points are created for the customer automatically. Points are then spent on the rewards.
+
+Everything below that talks about send points / mint / token.redeem / "Send points" button / AwardPointsForm / the free "spend points" form is OLD. The ERC-20 tokens, the acceptance rules and the dashboard layout are still valid.
+
+Contracts (Solidity 0.8.20, 58 tests passing with "truffle test")
+- RestaurantMarket.sol (NEW): menus, rewards, purchase and claim. It never holds money. It has no owner and no admin.
+- RestaurantToken.sol (CHANGED): only the market can create ("mint") or burn points now. The restaurant wallet can no longer mint by hand. New function redeem(customer, atRestaurant, points) used by the market, still emits Redeemed. New error NotMarket.
+- RestaurantRegistry.sol (CHANGED): it deploys the market in its own constructor (so there is nothing else to deploy and nothing to configure), gives it to every token it creates, and has a new market() getter and tokenOf(address) -> (token, isActive).
+- interfaces/IRestaurantToken.sol (NEW). test/mocks/HostileRestaurant.sol (NEW, tests only: a restaurant wallet that refuses money or tries to re-enter).
+
+Deployed addresses (Ganache, chain id 1337, http://127.0.0.1:7545)
+- RestaurantRegistry: 0xb25F7a0de0dE985de73Cb3f69a80ed2cC60792b1 (deployed in block 186). The market address is read from registry.market(). They are in loyalfront/lib/config.ts.
+- The old registry (0x93AE...) is obsolete, its restaurants are gone. The chain had moved from block 153 to 186 since the last note, so the number changed.
+
+Market functions
+- Restaurant owner: addItem(name, price, points), updateItem(itemId, price, points, isActive), addReward(name, cost), updateReward(rewardId, cost, isActive). Items and rewards are never deleted, only hidden (isActive = false), so old ids and old history always keep their meaning. Max 50 items and 50 rewards per restaurant, names up to 64 bytes, price and cost must be above zero (an item may earn 0 points).
+- Customer: purchase(restaurant, itemId, quantity) payable. The wallet must send EXACTLY price x quantity. The contract creates points x quantity for the buyer, then forwards the money to the restaurant wallet. If the restaurant wallet refuses the money the whole purchase is cancelled. A restaurant cannot buy from itself, and cannot sell while paused.
+- Customer: claimReward(restaurant, rewardId, token). It burns "cost" points of the chosen token. The restaurant must be active and must accept that token (own token only / all tokens / selected restaurants, same rules as before). A customer may pay with another restaurant's token if the restaurant accepts it.
+- Views: getItems(restaurant), getRewards(restaurant). Events: ItemAdded/ItemUpdated, RewardAdded/RewardUpdated, Purchased(restaurant, customer, itemId, quantity, paid, points), RewardClaimed(restaurant, customer, rewardId, token, points). The pages read history from these events.
+- Payment currency is the chain's native coin (ETH on Ganache), prices are stored in wei. 1 point is a whole number (token has 0 decimals).
+
+Frontend (loyalfront)
+- New pages: /catalog ("Menu & Rewards", owners only): add an item (name, price in ETH, points earned), edit price/points, hide/show; same for rewards (name, points needed). /restaurants/[address]: the restaurant's page with its Menu (quantity + "Buy . 0.01 ETH") and Rewards ("Pay with" the tokens you hold that this restaurant accepts, then "Claim"; "Not enough points" when too low). Own restaurant shows a note instead of Buy buttons, a paused one shows a warning.
+- Changed: the sidebar (owners get "Menu & Rewards"), the restaurant cards (they open the restaurant page), the owner dashboard ("Total Points Awarded" now means points earned by customers from purchases, new "Total sales" row, "Edit menu & rewards" button), the customer dashboard, Transactions (purchases and reward claims with item or reward name, price paid, points +/-), Points & Rewards (read only: points you can spend and already spent).
+- Removed: AwardPointsForm, the spend form, the manual send points flow.
+- New lib files: abi.ts, chain.ts (provider/contract helpers), market.ts, activity.ts. contracts.ts now only does registry and tokens. validation.ts and errors.ts know the new rules and messages (wrong payment, paused restaurant, token not accepted, hidden item...).
+
+Tested
+- 58 contract tests (market: exact payment, forwarding, reverting on a refusing or re-entering restaurant wallet, hidden items, limits, rewards with each acceptance mode).
+- Browser against Ganache with seeded data (2 restaurants, menus, rewards): customer bought 2 lattes (+20 BEAN, 0.02 ETH paid), claimed "Free coffee" using ANOTHER restaurant's token (accepted because the restaurant accepts all tokens), a restaurant that takes only its own token showed only its own token in "Pay with". Owner dashboard, transaction list, points page matched the chain. Owner added an item (with a wrong price rejected before MetaMask), hid an item and opened the edit form. Seeded data was removed by reverting Ganache, so the chain is empty again (block 186, same registry).
+- tsc, eslint and next build pass.
+
+Things to know / risks
+- Money goes straight from the customer to the restaurant wallet inside purchase(); there is no refund function and no platform fee.
+- A restaurant could buy from ANOTHER wallet it controls to farm points for free. The self-purchase block is not protection against that. Points only have value where a restaurant accepts them, which is why "Tokens of all restaurants" is risky: prefer "restaurants I work with".
+- A token can still be transferred between wallets (it is a normal ERC-20). Those transfers are not shown in the Transactions page (only purchases and reward claims).
+- An owner's Transactions page shows the restaurant side only (what customers did there).
+- Prices are in ETH, not in a stable coin. A real launch would need a stable token or a price feed.
+- The restaurant page reads the menu, rewards and your balances on load; the numbers update after each purchase/claim, other users' changes appear on the next reload.
+- To test: use three MetaMask accounts: one creates a restaurant and builds its menu on /catalog, a second creates another restaurant, a third (customer) buys on /restaurants and claims on the same page.
+
+PREVIOUS DECISION (partly replaced by the section above)
+
+1. The owner of the contracts only deploys them and then watches. There is no admin any more.
+2. Points are gone. Every restaurant now has its OWN ERC-20 TOKEN, created when the restaurant is created.
+3. The home page only has "Connect to MetaMask". After connecting you go straight to a dashboard with a sidebar. The dashboard depends on your role (restaurant owner or customer). See "Dashboard and navigation" below.
+Everything below that talks about "platform owner", owner(), transferOwnership, the owner registering restaurants, LoyaltyPoints, awardPoints, redeemPoints, getBalance, getTotalIssued, the three home buttons, the popups/windows or the old /tokens page is OLD and no longer true. The current rules are in the next two sections.
+
+Dashboard and navigation (CURRENT, frontend only - no contract change)
+
+What changed
+- Home (/): one button, "Connect to MetaMask". Once a wallet is connected (or was already approved), the app redirects to /menu. The three buttons are gone.
+- Every other page lives behind the same frame: sidebar on the left, header on top (restaurant or customer + wallet address). Without a connected wallet any of these pages sends you back to "/".
+- Disconnect: click the wallet address in the header -> Disconnect (or Copy address). The app remembers that you left on purpose (localStorage key loyalchain.signedOut) so an approved wallet does not log you straight back in, and it asks MetaMask to revoke the site's access (wallet_revokePermissions) when supported. Connecting again clears that flag.
+
+How we know your role
+- On entering the app we read the registry once (the RestaurantRegistered events, then restaurants(address) for each). If a restaurant exists at your wallet address you are an OWNER, otherwise a CUSTOMER. The same list is shared by every page, so pages do not read it again.
+- Switching account in MetaMask restarts the app state for the new wallet.
+
+Pages (the sidebar shows only what the role can use)
+- OWNER sidebar: Home, My Restaurant, Points & Rewards, Restaurants, Transactions.
+- CUSTOMER sidebar: Home, Create Restaurant, Restaurants, Points & Rewards, Transactions.
+- /menu (Home) - owner: "Total Points Awarded" with a chart (7D / 30D / 1Y), % change against the previous period, "Customer Activity" table (customer, +/- points, date), and a "Your Token" panel (symbol, contract, points in circulation, accepted tokens, "Send points" button). Customer: same layout with "Total Points Received", "Recent Activity" and "My Tokens".
+- /create (customers only): the create restaurant form (name, location, symbol, accepted tokens). When the transaction is confirmed the wallet becomes an owner and goes to its dashboard by itself. A wallet can register only one restaurant, so owners are sent to /menu.
+- /restaurant (owners only): details, accepted tokens (each change is one MetaMask confirmation), pause / resume.
+- /points: owners get the "send points" form on top. Everyone sees the tokens they hold (points to spend / already spent) and the form to spend them at a restaurant that accepts that token.
+- /restaurants: directory of all restaurants (token, accepted tokens, status).
+- /transactions: the full history (owner: points awarded and points spent at the restaurant; customer: points received and spent).
+- Old routes /tokens and the old popups (WalletMenu, Modal, restaurant window) were removed.
+
+Where the numbers come from (everything is read from the chain, nothing is stored by the app)
+- Total Points Awarded: the ERC-20 Transfer events of the restaurant's own token where "from" is the zero address (= mint). Customer Activity "-" rows: the Redeemed(customer, atRestaurant, points) events of EVERY restaurant's token where atRestaurant is this restaurant (customers can spend other restaurants' tokens here).
+- Customer side: Transfer events where "to" is the wallet (received) and Redeemed events where "customer" is the wallet (spent), for every token.
+- Date and time: the timestamp of the block that holds the event (cached, each block is asked once).
+- Points in circulation: totalSupply() of the token (points created minus points spent).
+- % change: points in the chosen range compared with the range just before it (7D vs the 7 days before). Hidden when the previous range had zero points.
+- Chart: one point per day for 7D and 30D, one per month for 1Y. Hover (or arrow keys) shows the day and amount.
+
+Left out on purpose
+- The "Recent Rewards" panel of the design (Free Coffee, 10% discount...) is NOT in the contracts, so it was not built. In its place the owner sees "Your Token" and the customer sees "My Tokens". A rewards catalog would need a new contract.
+- The restaurant photo and "Authorized" label: there is no image on chain. The avatar is a colored circle from the wallet address. "Authorized" = restaurant is active; a paused one shows "Paused".
+
+Code map (loyalfront)
+- lib/contracts.ts: added totalSupply, Transfer and Redeemed events to the token ABI, getTokenSupply, getRestaurantActivity, getCustomerActivity (+ block time cache). lib/stats.ts: pure functions for totals, % change and chart series. lib/format.ts: formatDateTime, plusPoints. lib/wallet.ts: disconnectWallet + signed-out flag.
+- components: AppShell (frame + wallet gate), ProfileProvider (role), Sidebar / Header / WalletChip / Identity, RoleGate (page guard), OwnerDashboard / CustomerDashboard / RangeChartCard / AreaChart / ActivityTable, CreateRestaurantForm, RestaurantSettings, AwardPointsForm, TokensPanel, RestaurantDirectory, TransactionsView, icons.
+- routes: app/(app)/{menu,create,restaurant,points,restaurants,transactions}. The folder (app) does not appear in the URL; it only shares the frame.
+
+Tested
+- Browser against Ganache with seeded data (2 restaurants, awards over 3 days, spends): owner totals, chart, table, token panel and customer totals/holdings matched the chain exactly (e.g. 220 awarded, 120 in circulation after 100 spent). Customer created a restaurant from /create and was moved to the owner dashboard. Disconnect returns to "/" and does not log back in. Without MetaMask the home page shows "MetaMask is not installed".
+- The chart/percent logic was also checked with synthetic dates (7D, 30D, 1Y, negative change, no previous period).
+- The seeded data was removed by reverting Ganache to its snapshot, so the chain is still empty (block 153, same registry address).
+- eslint, tsc and next build pass.
+
+Things to know
+- The restaurant list is read in full on every page load (events + one call per restaurant). Fine for a local chain; with many restaurants add an indexer (for example The Graph) or cache it.
+- An owner's Transactions page shows the restaurant side only. If an owner also holds other restaurants' tokens, those show on /points.
+
+ERC-20 tokens per restaurant (CURRENT)
+
+Why a new contract and not the old ones
+An ERC-20 token is one contract = one token. Per-restaurant tokens therefore need a token contract that is deployed once per restaurant. We did not put this logic inside the registry, and we did not keep LoyaltyPoints (one shared balance cannot be per-restaurant). So:
+- RestaurantToken.sol (NEW): the ERC-20 token. One is deployed for every restaurant.
+- RestaurantRegistry.sol (CHANGED): it is now also the factory. registerRestaurant deploys the restaurant's token and stores the acceptance rules.
+- interfaces/IRestaurantRegistry.sol (NEW): the 2 functions the token asks the registry (isAuthorizedRestaurant, acceptsToken).
+- LoyaltyPoints.sol, its migration and its test: DELETED. Replaced by the tokens.
+- We use OpenZeppelin ERC20 (version 5.0.2, pinned, in package.json at the project root). Run "npm install" in the project root once. It is the audited standard, so we did not write an ERC-20 by hand.
+
+Current address (Ganache, chain id 1337, http://127.0.0.1:7545) - fresh and empty
+- RestaurantRegistry: 0x93AE37d46287A4FE71bD52aC89aB5EE003629DFa (block 153)
+- There is no second contract to deploy any more. Tokens are created by the registry when a restaurant is created.
+- Address and block are in loyalfront/lib/config.ts. After every "truffle migrate --reset" update REGISTRY_ADDRESS and REGISTRY_DEPLOY_BLOCK there.
+
+How it works
+1. A wallet creates its restaurant: registerRestaurant(name, location, symbol, mode, selectedPartners). The registry deploys a token called "<name> Points" with your symbol (example: "Cafe Luna Points", LUNA). The restaurant wallet is the only wallet that can ever mint that token.
+2. When creating, the owner chooses which tokens the restaurant accepts as payment (its own token is always accepted):
+   - Only my own token (OwnTokenOnly)
+   - Tokens of all restaurants (AllTokens), including restaurants created later
+   - Tokens of restaurants I work with (SelectedPartners): only the restaurants ticked in the list
+   It can be changed later: setAcceptanceMode(mode) and setPartner(restaurant, true/false).
+3. A restaurant sends points by minting its token to a wallet: token.mint(wallet, points).
+4. A customer spends points with token.redeem(restaurant, points). The contract checks that this restaurant is active and accepts this token (registry.acceptsToken), then BURNS the points, adds them to the customer's "spent" total and emits Redeemed(customer, restaurant, points). The Redeemed event says which restaurant honored the points, so restaurants can settle between themselves outside the chain.
+5. Tokens are normal ERC-20: they can be transferred between wallets and shown in MetaMask. They have 0 decimals (whole points only).
+
+Rules and protections
+- Only the restaurant that owns a token can mint it (NotIssuer). The deployer has no power over any restaurant.
+- A paused restaurant cannot mint and accepts no token. Customers can still spend their points at other restaurants that accept them.
+- Acceptance is one way: if Luna lists Nori, Luna accepts NORI tokens, but Nori does not automatically accept LUNA.
+- A restaurant cannot list itself, and can only list restaurants that exist. Zero amounts are rejected. Spending more than you hold is rejected by the ERC-20 itself.
+- Tokens spent are burned, so totalSupply of a token = points still in customers' hands.
+
+Contract functions
+RestaurantRegistry: registerRestaurant(name, location, symbol, mode, selectedPartners), setRestaurantStatus(isActive), setAcceptanceMode(mode), setPartner(partner, accepted), restaurants(address), partners(restaurant, partner), issuerOf(token), isAuthorizedRestaurant(address), acceptsToken(restaurant, token). Event RestaurantRegistered is how the app finds every restaurant (and its token). Events AcceptanceModeUpdated, PartnerUpdated, RestaurantStatusUpdated.
+RestaurantToken: mint(to, points), redeem(atRestaurant, points), redeemedOf(customer), plus the ERC-20 functions (balanceOf, transfer, approve, name, symbol, totalSupply...).
+
+What you see in the app (loyalfront): see "Dashboard and navigation" above. The same functions are used (create restaurant with symbol and accepted tokens, send points = mint, change accepted tokens, pause / resume, spend points = redeem), now on their own pages instead of popups.
+
+Tested
+- 28 contract tests pass (truffle test): 15 registry + 13 token.
+- In the browser against Ganache: created a restaurant (token deployed), sent points, customer saw 50 and spent 20 at ANOTHER restaurant that listed it as a partner, removed the partner from the owner window and the chain confirmed it. The test data was removed by redeploying the registry, so the chain you start with is empty.
+
+Things to know
+- Creating a restaurant now deploys a token, so it costs about 770,000 gas (it was about 100,000). Fine on Ganache. On a public chain this would be reduced with minimal proxy clones.
+- Risk: with "Tokens of all restaurants", ANY wallet can create a restaurant and mint unlimited tokens that you must accept. Prefer "restaurants I work with" for real use.
+- The old test data (Cafe Luna etc.) is gone after the redeploy. Old addresses listed in the sections below no longer exist.
+- To test: cd loyalfront, npm run dev, open http://localhost:3000 (use localhost, not 127.0.0.1). Use different MetaMask accounts for each restaurant and customer.
+
+RestaurantRegistry review (first version, owner-based)
+
+The contract lets the platform owner register restaurants and turn them active or inactive. A restaurant is authorized only when it is both registered and active.
+
+What we changed:
+- Custom errors instead of revert strings
+- Reject zero address, empty name, empty location, and oversized strings (name 128 bytes, location 256 bytes)
+- Skip a status update when the value is already stored
+- Two-step ownership transfer so the owner key can be rotated. No renounce, so registration cannot be frozen by accident
+- Packed the two flags in one storage slot and read them once in isAuthorizedRestaurant
+- String arguments use calldata. Compiler optimizer is on
+
+Registration rules are the same: owner-only, new restaurants start active, the same address cannot be registered twice, and name and location stay fixed after registration.
+
+Deploy gas dropped from about 1,049,000 to 684,000. Register gas for a short name went from about 98,500 to 96,000. Nine tests passing. Needs a fresh deploy (truffle migrate --reset).
+
+Wallet connection
+
+Clicking "Connect your MetaMask wallet" opens MetaMask, switches to LoyalChain Local (chain id 1337, http://127.0.0.1:7545), then reads the registry deployed by the latest migrate.
+
+Older addresses (replaced, see the last section for the current ones):
+- RestaurantRegistry: 0x72F0A77e44Adb36D9547e52011Ca1ACa7ab80439
+- LoyaltyPoints: 0x4aA8F108e7882A71FF2082C914247eC6C7d9f03C
+
+Who sees what:
+- Platform owner: popup with a form to register a restaurant. We know this because the connected address is the same as owner().
+- Restaurant: popup "welcome restaurent owner sa7a alik XD". We know this because restaurants(connectedAddress) comes back with isRegistered = true. The restaurant name is shown under the message. A deactivated restaurant still counts, because the address stays registered.
+- Anyone else: popup "welcome ma man".
+
+If the platform owner address is also registered as a restaurant, they still get the registration form.
+
+Contract functions used by the page:
+- owner() to see who the platform owner is
+- restaurants(address) to see if this wallet is a registered restaurant (name, location, isRegistered, isActive)
+- registerRestaurant(address, name, location) when the owner submits the form. The new restaurant starts active. The same address cannot be registered twice.
+
+The form asks for the restaurant wallet, the name, and the location. Name max 128 bytes, location max 256 bytes. Empty values and the zero address are rejected in the page before a transaction is sent. MetaMask still has to confirm the real transaction.
+
+The registry must be running on Ganache at port 7545. If MetaMask is on another network, the page asks it to switch to LoyalChain Local.
+
+Loyalty points on the page
+
+The same popup now talks to LoyaltyPoints, based on the role already chosen from the registry.
+
+- Platform owner: still only the restaurant registration form. No points controls.
+- Restaurant: keeps "welcome restaurent owner sa7a alik XD", then a form to send points. Submit calls awardPoints(customerWallet, points). The contract only accepts this while isAuthorizedRestaurant(restaurant) is true, so a deactivated restaurant sees the welcome message and a note that it cannot send points.
+- Customer (any other wallet): keeps "welcome ma man", then getBalance for points they can spend and getTotalIssued for points they already spent. Spending calls redeemPoints(points) and refreshes both numbers.
+
+New contract functions used by the page:
+- awardPoints(address user, uint256 points)
+- redeemPoints(uint256 points)
+- getBalance(address user)
+- getTotalIssued(address user)
+
+Points are one shared balance per customer. Any active restaurant can add to it. Spending is done by the customer, not by the restaurant. Zero points, a bad address, and spending more than the balance are blocked in the form before MetaMask, and the contract rejects them too.
+
+No admin: open registration (current behaviour)
+
+Why the contract changed
+The old RestaurantRegistry only let the owner register restaurants, so a restaurant could not create itself. To follow the new decision (owner only deploys), the owner was removed from the contract completely. This is a contract change, so both contracts were redeployed with truffle migrate --reset.
+
+Current addresses (Ganache, chain id 1337, http://127.0.0.1:7545)
+- RestaurantRegistry: 0x0319d85c2689Bf152AD100761CB4E009C3dDabB6 (deployed in block 60)
+- LoyaltyPoints: 0x43495b8A9a5eA1E961683173987F2562c3D3758b
+- LoyaltyPoints.registry() points at that RestaurantRegistry.
+- They live in loyalfront/lib/config.ts. After every truffle migrate --reset, update both addresses and REGISTRY_DEPLOY_BLOCK there.
+
+RestaurantRegistry, what changed
+- Removed: owner(), pendingOwner(), transferOwnership(), acceptOwnership(), the onlyOwner rule, and the NotOwner / InvalidAddress errors.
+- registerRestaurant(name, location): anyone can call it. It registers the CALLER's own wallet. Nobody can register another address. One restaurant per wallet, forever.
+- setRestaurantStatus(isActive): now called by the restaurant itself to pause or resume sending points. The deployer has no power over it.
+- Unchanged: restaurants(address), isAuthorizedRestaurant(address), the 128 / 256 byte limits, the events, and LoyaltyPoints (it was not touched).
+- Tests: 15 passing (9 registry, 6 loyalty). One test checks that the contract has no owner functions, another that the deployer has no special rights.
+
+Frontend: what you see now
+Home page (SignInScreen):
+1. One button: "Connect to MetaMask". It switches MetaMask to LoyalChain Local if needed.
+2. After connecting, the buttons appear:
+   - If your wallet already has a restaurant: a button with the restaurant name, and the message "welcome restaurent owner sa7a alik XD". The button opens a window to send points to any wallet, and a button to pause or resume sending points.
+   - If it does not: the message "welcome ma man" and a "Create restaurant" button (name + location form). Once it succeeds, the button turns into your restaurant name. "Create restaurant" is hidden when you already have one, because the contract allows only one per wallet.
+   - "Restaurants": opens /restaurants.
+   - "My points": opens /points.
+/restaurants: every restaurant (name, location, short address, Active or Paused, "yours" on your own). It works even before connecting a wallet.
+/points: your points you can spend, your points already spent, and a form to spend points. If not connected, it shows a connect button.
+
+Contract functions used by the frontend
+RestaurantRegistry:
+- restaurants(address): to know if a wallet has a restaurant, and to read its name, location and status.
+- registerRestaurant(name, location): "Create restaurant".
+- setRestaurantStatus(bool): "Pause / Resume sending points".
+- Event RestaurantRegistered: this is how the /restaurants page finds all restaurants (read from the registry deployment block). No array was added to the contract, so registering stays cheaper.
+LoyaltyPoints:
+- awardPoints(user, points): restaurant sends points.
+- redeemPoints(points): customer spends points.
+- getBalance(user): points the customer can still spend.
+- getTotalIssued(user): points the customer already spent.
+
+Things to know
+- Reads (lists, balances) go straight to Ganache, so they work without MetaMask. Writes always go through MetaMask.
+- Blockchain errors are turned into short messages (already has a restaurant, only an active restaurant can send points, not enough points...).
+- Code layout in loyalfront: lib/ (config, wallet, contracts, validation, errors), components/ (WalletProvider, WalletMenu, dialogs, lists, shared UI), app/restaurants and app/points (pages).
+- Risk to keep in mind: with no admin, ANY wallet can become a restaurant and then send points to anyone, including itself. That is fine for testing. Before real use, points need a rule (for example, only count points per restaurant, or a moderation step).
+- The deployer wallet gets no special screen. It is just another wallet.
+- Test data: while testing the page we created "Cafe Luna" (wallet 0x1Ab6...A0ed), sent it 50 points to 0xc75c...40E6, and that wallet spent 20. Run truffle migrate --reset to start clean, then update lib/config.ts.
+- To test: cd loyalfront, npm run dev, open http://localhost:3000 (use localhost, not 127.0.0.1).

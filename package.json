@@ -1,0 +1,9 @@
+{
+  "name": "loyalchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LoyalChain smart contracts (Truffle).",
+  "dependencies": {
+    "@openzeppelin/contracts": "5.0.2"
+  }
+}
