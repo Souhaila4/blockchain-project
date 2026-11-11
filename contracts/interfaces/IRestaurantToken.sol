@@ -8,4 +8,7 @@ interface IRestaurantToken {
 
     /// @notice Burns `points` of `customer`, spent at `atRestaurant`.
     function redeem(address customer, address atRestaurant, uint256 points) external;
+
+    /// @notice Gives back `points` to `customer` after a cancelled claim. Undoes a `redeem`.
+    function refund(address customer, address atRestaurant, uint256 points) external;
 }

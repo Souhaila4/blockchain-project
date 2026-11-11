@@ -26,13 +26,35 @@ contract RestaurantMarket is ReentrancyGuard {
     }
 
     /// @notice One thing a customer can get by spending points.
-    /// @dev `cost` and `isActive` share one storage slot. Keep them adjacent.
+    /// @dev `cost`, `stock` and `isActive` share one storage slot. Keep them adjacent.
     struct Reward {
         string name;
         /// @dev In points of any token the restaurant accepts.
         uint64 cost;
+        /// @dev Units left, or `UNLIMITED_STOCK`.
+        uint32 stock;
         bool isActive;
     }
+
+    /// @notice Where a claim stands.
+    enum ClaimStatus {
+        Pending,
+        Fulfilled,
+        Cancelled
+    }
+
+    /// @notice A reward a customer paid for with points, until the restaurant hands it over or cancels.
+    struct Claim {
+        address restaurant;
+        address customer;
+        address token;
+        uint64 rewardId;
+        uint64 points;
+        ClaimStatus status;
+    }
+
+    /// @notice Stock value meaning "no limit".
+    uint32 public constant UNLIMITED_STOCK = type(uint32).max;
 
     /// @notice Most menu items one restaurant can have. Keeps `getItems` cheap to read.
     uint256 public constant MAX_ITEMS = 50;
@@ -48,6 +70,8 @@ contract RestaurantMarket is ReentrancyGuard {
 
     mapping(address restaurant => Item[]) private _items;
     mapping(address restaurant => Reward[]) private _rewards;
+    Claim[] private _claims;
+    mapping(address customer => uint256[]) private _customerClaims;
 
     event ItemAdded(
         address indexed restaurant,
@@ -63,11 +87,18 @@ contract RestaurantMarket is ReentrancyGuard {
         uint64 points,
         bool isActive
     );
-    event RewardAdded(address indexed restaurant, uint256 indexed rewardId, string name, uint64 cost);
+    event RewardAdded(
+        address indexed restaurant,
+        uint256 indexed rewardId,
+        string name,
+        uint64 cost,
+        uint32 stock
+    );
     event RewardUpdated(
         address indexed restaurant,
         uint256 indexed rewardId,
         uint64 cost,
+        uint32 stock,
         bool isActive
     );
     event Purchased(
@@ -82,8 +113,16 @@ contract RestaurantMarket is ReentrancyGuard {
         address indexed restaurant,
         address indexed customer,
         uint256 indexed rewardId,
+        uint256 claimId,
         address token,
         uint256 points
+    );
+    event ClaimFulfilled(uint256 indexed claimId, address indexed restaurant, address indexed customer);
+    event ClaimCancelled(
+        uint256 indexed claimId,
+        address indexed restaurant,
+        address indexed customer,
+        address cancelledBy
     );
 
     error NotRegistered(address account);
@@ -103,6 +142,12 @@ contract RestaurantMarket is ReentrancyGuard {
     error WrongPayment(uint256 sent, uint256 expected);
     error PaymentFailed();
     error NotAccepted(address restaurant, address token);
+    error PriceTooHigh(uint256 cost, uint256 maxCost);
+    error OutOfStock(uint256 rewardId);
+    error UnknownClaim(uint256 claimId);
+    error NotClaimRestaurant(uint256 claimId, address caller);
+    error NotCancelAllowed(uint256 claimId, address caller);
+    error ClaimNotPending(uint256 claimId);
 
     constructor(IRestaurantRegistry registry_) {
         registry = registry_;
@@ -146,7 +191,8 @@ contract RestaurantMarket is ReentrancyGuard {
     /// @notice Adds a reward to the caller's list. It starts available.
     /// @param name Non-empty, at most `MAX_NAME_LENGTH` bytes. Cannot be changed later.
     /// @param cost Points needed to claim it. Must not be zero.
-    function addReward(string calldata name, uint64 cost) external {
+    /// @param stock Units available, or `UNLIMITED_STOCK`.
+    function addReward(string calldata name, uint64 cost, uint32 stock) external {
         _requireRegistered(msg.sender);
         _validateName(name);
         if (cost == 0) revert ZeroCost();
@@ -155,20 +201,21 @@ contract RestaurantMarket is ReentrancyGuard {
         uint256 rewardId = rewards.length;
         if (rewardId >= MAX_REWARDS) revert TooManyRewards();
 
-        rewards.push(Reward({name: name, cost: cost, isActive: true}));
+        rewards.push(Reward({name: name, cost: cost, stock: stock, isActive: true}));
 
-        emit RewardAdded(msg.sender, rewardId, name, cost);
+        emit RewardAdded(msg.sender, rewardId, name, cost, stock);
     }
 
-    /// @notice Changes the cost or the availability of one of the caller's rewards.
-    function updateReward(uint256 rewardId, uint64 cost, bool isActive) external {
+    /// @notice Changes the cost, the stock or the availability of one of the caller's rewards.
+    function updateReward(uint256 rewardId, uint64 cost, uint32 stock, bool isActive) external {
         if (cost == 0) revert ZeroCost();
 
         Reward storage reward = _reward(msg.sender, rewardId);
         reward.cost = cost;
+        reward.stock = stock;
         reward.isActive = isActive;
 
-        emit RewardUpdated(msg.sender, rewardId, cost, isActive);
+        emit RewardUpdated(msg.sender, rewardId, cost, stock, isActive);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -203,17 +250,76 @@ contract RestaurantMarket is ReentrancyGuard {
         emit Purchased(restaurant, msg.sender, itemId, quantity, total, points);
     }
 
-    /// @notice Spends points on a reward of `restaurant`. The points are burned.
+    /// @notice Spends points on a reward of `restaurant`. The points are burned and a pending claim
+    ///         is created. The restaurant then calls `fulfill`, or `cancel` to give the points back.
     /// @param token The token to pay with. It must be accepted by `restaurant` right now.
-    function claimReward(address restaurant, uint256 rewardId, address token) external {
+    /// @param maxCost The most points the caller agrees to pay. Protects against a cost change
+    ///        between signing and mining.
+    function claimReward(
+        address restaurant,
+        uint256 rewardId,
+        address token,
+        uint256 maxCost
+    ) external returns (uint256 claimId) {
         Reward storage reward = _reward(restaurant, rewardId);
         if (!reward.isActive) revert RewardUnavailable(rewardId);
         if (!registry.acceptsToken(restaurant, token)) revert NotAccepted(restaurant, token);
 
-        uint256 cost = reward.cost;
+        uint64 cost = reward.cost;
+        if (cost > maxCost) revert PriceTooHigh(cost, maxCost);
+
+        uint32 stock = reward.stock;
+        if (stock != UNLIMITED_STOCK) {
+            if (stock == 0) revert OutOfStock(rewardId);
+            reward.stock = stock - 1;
+        }
+
+        claimId = _claims.length;
+        _claims.push(
+            Claim({
+                restaurant: restaurant,
+                customer: msg.sender,
+                token: token,
+                rewardId: uint64(rewardId),
+                points: cost,
+                status: ClaimStatus.Pending
+            })
+        );
+        _customerClaims[msg.sender].push(claimId);
+
         IRestaurantToken(token).redeem(msg.sender, restaurant, cost);
 
-        emit RewardClaimed(restaurant, msg.sender, rewardId, token, cost);
+        emit RewardClaimed(restaurant, msg.sender, rewardId, claimId, token, cost);
+    }
+
+    /// @notice Marks a pending claim as handed over. Only the restaurant that owns the reward.
+    function fulfill(uint256 claimId) external {
+        Claim storage claim = _claim(claimId);
+        if (msg.sender != claim.restaurant) revert NotClaimRestaurant(claimId, msg.sender);
+        if (claim.status != ClaimStatus.Pending) revert ClaimNotPending(claimId);
+
+        claim.status = ClaimStatus.Fulfilled;
+
+        emit ClaimFulfilled(claimId, claim.restaurant, claim.customer);
+    }
+
+    /// @notice Cancels a pending claim: the points are given back and the stock is restored.
+    ///         Allowed for the restaurant and for the customer who made the claim.
+    function cancel(uint256 claimId) external {
+        Claim storage claim = _claim(claimId);
+        if (msg.sender != claim.restaurant && msg.sender != claim.customer) {
+            revert NotCancelAllowed(claimId, msg.sender);
+        }
+        if (claim.status != ClaimStatus.Pending) revert ClaimNotPending(claimId);
+
+        claim.status = ClaimStatus.Cancelled;
+
+        Reward storage reward = _rewards[claim.restaurant][claim.rewardId];
+        if (reward.stock != UNLIMITED_STOCK) reward.stock += 1;
+
+        IRestaurantToken(claim.token).refund(claim.customer, claim.restaurant, claim.points);
+
+        emit ClaimCancelled(claimId, claim.restaurant, claim.customer, msg.sender);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -230,6 +336,20 @@ contract RestaurantMarket is ReentrancyGuard {
         return _rewards[restaurant];
     }
 
+    /// @notice One claim by id.
+    function getClaim(uint256 claimId) external view returns (Claim memory) {
+        return _claim(claimId);
+    }
+
+    /// @notice Every claim made by `customer`, oldest first, with their ids.
+    function getCustomerClaims(
+        address customer
+    ) external view returns (uint256[] memory ids, Claim[] memory claims) {
+        ids = _customerClaims[customer];
+        claims = new Claim[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) claims[i] = _claims[ids[i]];
+    }
+
     // ---------------------------------------------------------------------------------------------
     // Internals
     // ---------------------------------------------------------------------------------------------
@@ -243,6 +363,11 @@ contract RestaurantMarket is ReentrancyGuard {
         Item[] storage items = _items[restaurant];
         if (itemId >= items.length) revert UnknownItem(itemId);
         return items[itemId];
+    }
+
+    function _claim(uint256 claimId) private view returns (Claim storage) {
+        if (claimId >= _claims.length) revert UnknownClaim(claimId);
+        return _claims[claimId];
     }
 
     function _reward(address restaurant, uint256 rewardId) private view returns (Reward storage) {

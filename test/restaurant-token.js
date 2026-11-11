@@ -75,10 +75,10 @@ contract("RestaurantToken", (accounts) => {
     });
 
     it("lets a wallet that received points spend them on a reward", async () => {
-      await market.addReward("Free coffee", 15, { from: luna });
+      await market.addReward("Free coffee", 15, 0xffffffff, { from: luna });
       await token.transfer(friend, 20, { from: customer });
 
-      await market.claimReward(luna, 0, token.address, { from: friend });
+      await market.claimReward(luna, 0, token.address, 1000000, { from: friend });
 
       assert.equal(await balance(friend), "5");
       assert.equal((await token.redeemedOf(friend)).toString(), "15");

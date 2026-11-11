@@ -22,6 +22,7 @@ contract RestaurantToken is ERC20, IRestaurantToken {
     mapping(address customer => uint256 points) public redeemedOf;
 
     event Redeemed(address indexed customer, address indexed atRestaurant, uint256 points);
+    event Refunded(address indexed customer, address indexed atRestaurant, uint256 points);
 
     error NotMarket(address caller);
 
@@ -52,6 +53,16 @@ contract RestaurantToken is ERC20, IRestaurantToken {
         redeemedOf[customer] += points;
 
         emit Redeemed(customer, atRestaurant, points);
+    }
+
+    /// @inheritdoc IRestaurantToken
+    /// @dev Mints the points back and lowers `redeemedOf`. Only the market can call it, and it only
+    ///      does so for a claim that was still pending.
+    function refund(address customer, address atRestaurant, uint256 points) external onlyMarket {
+        _mint(customer, points);
+        redeemedOf[customer] -= points;
+
+        emit Refunded(customer, atRestaurant, points);
     }
 
     /// @notice Points are whole numbers.

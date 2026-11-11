@@ -1,0 +1,83 @@
+import { Interface } from "ethers";
+
+/** The parts of each contract the app uses, as human-readable ABIs. Errors are listed so reverts can be decoded. */
+
+export const REGISTRY_ABI = [
+  "function market() view returns (address)",
+  "function restaurants(address restaurant) view returns (string name, string location, address token, bool isActive, uint8 mode)",
+  "function partners(address restaurant, address partner) view returns (bool accepted)",
+  "function acceptsToken(address restaurantAddress, address token) view returns (bool)",
+  "function registerRestaurant(string name, string location, string symbol, uint8 mode, address[] selectedPartners)",
+  "function setRestaurantStatus(bool isActive)",
+  "function setAcceptanceMode(uint8 mode)",
+  "function setPartner(address partner, bool accepted)",
+  "event RestaurantRegistered(address indexed restaurantAddress, address indexed token, string name, string location, uint8 mode)",
+  "error AlreadyRegistered(address restaurant)",
+  "error EmptyLocation()",
+  "error EmptyName()",
+  "error EmptySymbol()",
+  "error LocationTooLong(uint256 length)",
+  "error ModeUnchanged(uint8 mode)",
+  "error NameTooLong(uint256 length)",
+  "error NotRegistered(address restaurant)",
+  "error PartnerUnchanged(address partner, bool accepted)",
+  "error PartnersNeedSelectedMode()",
+  "error SelfPartner()",
+  "error StatusUnchanged(address restaurant, bool isActive)",
+  "error SymbolTooLong(uint256 length)",
+];
+
+export const TOKEN_ABI = [
+  "function symbol() view returns (string)",
+  "function totalSupply() view returns (uint256)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function redeemedOf(address customer) view returns (uint256)",
+  "error NotMarket(address caller)",
+  "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+  "error ERC20InvalidReceiver(address receiver)",
+];
+
+export const MARKET_ABI = [
+  "function getItems(address restaurant) view returns (tuple(string name, uint128 price, uint64 points, bool isActive)[])",
+  "function getRewards(address restaurant) view returns (tuple(string name, uint64 cost, uint32 stock, bool isActive)[])",
+  "function addItem(string name, uint128 price, uint64 points)",
+  "function updateItem(uint256 itemId, uint128 price, uint64 points, bool isActive)",
+  "function addReward(string name, uint64 cost, uint32 stock)",
+  "function updateReward(uint256 rewardId, uint64 cost, uint32 stock, bool isActive)",
+  "function purchase(address restaurant, uint256 itemId, uint256 quantity) payable",
+  "function claimReward(address restaurant, uint256 rewardId, address token, uint256 maxCost) returns (uint256 claimId)",
+  "function fulfill(uint256 claimId)",
+  "function cancel(uint256 claimId)",
+  "function getClaim(uint256 claimId) view returns (tuple(address restaurant, address customer, address token, uint64 rewardId, uint64 points, uint8 status))",
+  "function getCustomerClaims(address customer) view returns (uint256[] ids, tuple(address restaurant, address customer, address token, uint64 rewardId, uint64 points, uint8 status)[] claims)",
+  "event Purchased(address indexed restaurant, address indexed customer, uint256 indexed itemId, uint256 quantity, uint256 paid, uint256 points)",
+  "event RewardClaimed(address indexed restaurant, address indexed customer, uint256 indexed rewardId, uint256 claimId, address token, uint256 points)",
+  "event ClaimFulfilled(uint256 indexed claimId, address indexed restaurant, address indexed customer)",
+  "event ClaimCancelled(uint256 indexed claimId, address indexed restaurant, address indexed customer, address cancelledBy)",
+  "error NotRegistered(address account)",
+  "error EmptyName()",
+  "error NameTooLong(uint256 length)",
+  "error ZeroPrice()",
+  "error ZeroCost()",
+  "error TooManyItems()",
+  "error TooManyRewards()",
+  "error UnknownItem(uint256 itemId)",
+  "error UnknownReward(uint256 rewardId)",
+  "error ItemUnavailable(uint256 itemId)",
+  "error RewardUnavailable(uint256 rewardId)",
+  "error ZeroQuantity()",
+  "error SelfPurchase()",
+  "error RestaurantNotActive(address restaurant)",
+  "error WrongPayment(uint256 sent, uint256 expected)",
+  "error PaymentFailed()",
+  "error NotAccepted(address restaurant, address token)",
+  "error PriceTooHigh(uint256 cost, uint256 maxCost)",
+  "error OutOfStock(uint256 rewardId)",
+  "error UnknownClaim(uint256 claimId)",
+  "error NotClaimRestaurant(uint256 claimId, address caller)",
+  "error NotCancelAllowed(uint256 claimId, address caller)",
+  "error ClaimNotPending(uint256 claimId)",
+];
+
+/** Used by `errors.ts` to find out which contract error a failed transaction carried. */
+export const errorInterfaces = [REGISTRY_ABI, TOKEN_ABI, MARKET_ABI].map((abi) => new Interface(abi));

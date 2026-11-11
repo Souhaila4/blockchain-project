@@ -86,7 +86,7 @@ contract("RestaurantMarket", (accounts) => {
         market.addItem("Latte", LATTE, 10, { from: customer }),
         "NotRegistered(address)"
       );
-      await expectCustomError(market.addReward("Coffee", 10, { from: customer }), "NotRegistered(address)");
+      await expectCustomError(market.addReward("Coffee", 10, 0xffffffff, { from: customer }), "NotRegistered(address)");
     });
 
     it("rejects bad names and prices", async () => {
@@ -149,14 +149,14 @@ contract("RestaurantMarket", (accounts) => {
 
   describe("rewards", () => {
     it("lets a restaurant add and change rewards", async () => {
-      const tx = await market.addReward("Free coffee", 100, { from: luna });
+      const tx = await market.addReward("Free coffee", 100, 0xffffffff, { from: luna });
       const event = logOf(tx, "RewardAdded");
       assert.equal(event.args.restaurant, luna);
       assert.equal(event.args.rewardId.toString(), "0");
       assert.equal(event.args.name, "Free coffee");
       assert.equal(event.args.cost.toString(), "100");
 
-      const update = await market.updateReward(0, 80, false, { from: luna });
+      const update = await market.updateReward(0, 80, 0xffffffff, false, { from: luna });
       assert.equal(logOf(update, "RewardUpdated").args.cost.toString(), "80");
 
       const reward = (await market.getRewards(luna))[0];
@@ -166,26 +166,26 @@ contract("RestaurantMarket", (accounts) => {
     });
 
     it("rejects bad input and other restaurants", async () => {
-      await expectCustomError(market.addReward("", 10, { from: luna }), "EmptyName()");
+      await expectCustomError(market.addReward("", 10, 0xffffffff, { from: luna }), "EmptyName()");
       await expectCustomError(
-        market.addReward("x".repeat(65), 10, { from: luna }),
+        market.addReward("x".repeat(65), 10, 0xffffffff, { from: luna }),
         "NameTooLong(uint256)"
       );
-      await expectCustomError(market.addReward("Free coffee", 0, { from: luna }), "ZeroCost()");
+      await expectCustomError(market.addReward("Free coffee", 0, 0xffffffff, { from: luna }), "ZeroCost()");
 
-      await market.addReward("Free coffee", 100, { from: luna });
+      await market.addReward("Free coffee", 100, 0xffffffff, { from: luna });
       await expectCustomError(
-        market.updateReward(0, 50, true, { from: nori }),
+        market.updateReward(0, 50, 0xffffffff, true, { from: nori }),
         "UnknownReward(uint256)"
       );
-      await expectCustomError(market.updateReward(0, 0, true, { from: luna }), "ZeroCost()");
+      await expectCustomError(market.updateReward(0, 0, 0xffffffff, true, { from: luna }), "ZeroCost()");
     });
 
     it("limits the number of rewards", async () => {
       for (let i = 0; i < 50; i += 1) {
-        await market.addReward(`Reward ${i}`, 10, { from: luna });
+        await market.addReward(`Reward ${i}`, 10, 0xffffffff, { from: luna });
       }
-      await expectCustomError(market.addReward("One more", 10, { from: luna }), "TooManyRewards()");
+      await expectCustomError(market.addReward("One more", 10, 0xffffffff, { from: luna }), "TooManyRewards()");
     });
   });
 
@@ -368,13 +368,13 @@ contract("RestaurantMarket", (accounts) => {
   describe("rewards: claiming", () => {
     beforeEach(async () => {
       await market.addItem("Latte", LATTE, 60, { from: luna });
-      await market.addReward("Free coffee", 100, { from: luna });
-      await market.addReward("Free dessert", 30, { from: luna });
+      await market.addReward("Free coffee", 100, 0xffffffff, { from: luna });
+      await market.addReward("Free dessert", 30, 0xffffffff, { from: luna });
       await market.purchase(luna, 0, 2, { from: customer, value: toBN(LATTE).muln(2) }); // 120 LUNA
     });
 
     it("burns the points and records the claim", async () => {
-      const tx = await market.claimReward(luna, 0, lunaToken.address, { from: customer });
+      const tx = await market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer });
 
       const event = logOf(tx, "RewardClaimed");
       assert.equal(event.args.restaurant, luna);
@@ -398,14 +398,14 @@ contract("RestaurantMarket", (accounts) => {
     });
 
     it("needs enough points", async () => {
-      await market.claimReward(luna, 0, lunaToken.address, { from: customer });
+      await market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer });
 
       await expectCustomError(
-        market.claimReward(luna, 0, lunaToken.address, { from: customer }),
+        market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer }),
         "ERC20InsufficientBalance(address,uint256,uint256)"
       );
       await expectCustomError(
-        market.claimReward(luna, 1, lunaToken.address, { from: other }),
+        market.claimReward(luna, 1, lunaToken.address, 1000000, { from: other }),
         "ERC20InsufficientBalance(address,uint256,uint256)"
       );
       assert.equal(await balance(lunaToken, customer), "20");
@@ -413,24 +413,24 @@ contract("RestaurantMarket", (accounts) => {
 
     it("rejects unknown and hidden rewards", async () => {
       await expectCustomError(
-        market.claimReward(luna, 5, lunaToken.address, { from: customer }),
+        market.claimReward(luna, 5, lunaToken.address, 1000000, { from: customer }),
         "UnknownReward(uint256)"
       );
 
-      await market.updateReward(1, 30, false, { from: luna });
+      await market.updateReward(1, 30, 0xffffffff, false, { from: luna });
       await expectCustomError(
-        market.claimReward(luna, 1, lunaToken.address, { from: customer }),
+        market.claimReward(luna, 1, lunaToken.address, 1000000, { from: customer }),
         "RewardUnavailable(uint256)"
       );
 
-      await market.updateReward(1, 30, true, { from: luna });
-      await market.claimReward(luna, 1, lunaToken.address, { from: customer });
+      await market.updateReward(1, 30, 0xffffffff, true, { from: luna });
+      await market.claimReward(luna, 1, lunaToken.address, 1000000, { from: customer });
       assert.equal(await balance(lunaToken, customer), "90");
     });
 
     it("uses the cost at the time of the claim", async () => {
-      await market.updateReward(0, 50, true, { from: luna });
-      await market.claimReward(luna, 0, lunaToken.address, { from: customer });
+      await market.updateReward(0, 50, 0xffffffff, true, { from: luna });
+      await market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer });
 
       assert.equal(await balance(lunaToken, customer), "70");
     });
@@ -440,12 +440,12 @@ contract("RestaurantMarket", (accounts) => {
       await market.purchase(nori, 0, 1, { from: customer, value: LATTE });
 
       await expectCustomError(
-        market.claimReward(luna, 1, noriToken.address, { from: customer }),
+        market.claimReward(luna, 1, noriToken.address, 1000000, { from: customer }),
         "NotAccepted(address,address)"
       );
       // A token that did not come from our registry is never accepted.
       await expectCustomError(
-        market.claimReward(luna, 1, other, { from: customer }),
+        market.claimReward(luna, 1, other, 1000000, { from: customer }),
         "NotAccepted(address,address)"
       );
       assert.equal(await balance(noriToken, customer), "40");
@@ -457,7 +457,7 @@ contract("RestaurantMarket", (accounts) => {
 
       await registry.setAcceptanceMode(SELECTED, { from: luna });
       await registry.setPartner(nori, true, { from: luna });
-      await market.claimReward(luna, 1, noriToken.address, { from: customer });
+      await market.claimReward(luna, 1, noriToken.address, 1000000, { from: customer });
 
       assert.equal(await balance(noriToken, customer), "10");
       assert.equal((await noriToken.redeemedOf(customer)).toString(), "30");
@@ -465,7 +465,7 @@ contract("RestaurantMarket", (accounts) => {
 
       await registry.setPartner(nori, false, { from: luna });
       await expectCustomError(
-        market.claimReward(luna, 1, noriToken.address, { from: customer }),
+        market.claimReward(luna, 1, noriToken.address, 1000000, { from: customer }),
         "NotAccepted(address,address)"
       );
     });
@@ -475,7 +475,7 @@ contract("RestaurantMarket", (accounts) => {
       await market.purchase(nori, 0, 1, { from: customer, value: LATTE });
 
       await registry.setAcceptanceMode(ALL, { from: luna });
-      await market.claimReward(luna, 1, noriToken.address, { from: customer });
+      await market.claimReward(luna, 1, noriToken.address, 1000000, { from: customer });
 
       assert.equal(await balance(noriToken, customer), "10");
     });
@@ -483,12 +483,12 @@ contract("RestaurantMarket", (accounts) => {
     it("is refused while the restaurant is paused", async () => {
       await registry.setRestaurantStatus(false, { from: luna });
       await expectCustomError(
-        market.claimReward(luna, 0, lunaToken.address, { from: customer }),
+        market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer }),
         "NotAccepted(address,address)"
       );
 
       await registry.setRestaurantStatus(true, { from: luna });
-      await market.claimReward(luna, 0, lunaToken.address, { from: customer });
+      await market.claimReward(luna, 0, lunaToken.address, 1000000, { from: customer });
     });
 
     it("still works when the restaurant that issued the points is paused", async () => {
@@ -497,8 +497,63 @@ contract("RestaurantMarket", (accounts) => {
       await registry.setAcceptanceMode(ALL, { from: luna });
       await registry.setRestaurantStatus(false, { from: nori });
 
-      await market.claimReward(luna, 1, noriToken.address, { from: customer });
+      await market.claimReward(luna, 1, noriToken.address, 1000000, { from: customer });
       assert.equal(await balance(noriToken, customer), "10");
+    });
+  });
+
+  describe("rewards: stock and claim lifecycle", () => {
+    beforeEach(async () => {
+      await market.addItem("Latte", LATTE, 60, { from: luna });
+      await market.addReward("Free coffee", 100, 1, { from: luna });
+      await market.purchase(luna, 0, 3, { from: customer, value: toBN(LATTE).muln(3) }); // 180 LUNA
+    });
+
+    it("refuses when the cost is above maxCost", async () => {
+      await expectCustomError(
+        market.claimReward(luna, 0, lunaToken.address, 99, { from: customer }),
+        "PriceTooHigh(uint256,uint256)"
+      );
+    });
+
+    it("runs out of stock and creates a pending claim", async () => {
+      const tx = await market.claimReward(luna, 0, lunaToken.address, 100, { from: customer });
+      assert.equal(logOf(tx, "RewardClaimed").args.claimId.toString(), "0");
+      const claim = await market.getClaim(0);
+      assert.equal(claim.status.toString(), "0");
+      assert.equal((await market.getCustomerClaims(customer)).ids.length, 1);
+      await expectCustomError(
+        market.claimReward(luna, 0, lunaToken.address, 100, { from: customer }),
+        "OutOfStock(uint256)"
+      );
+    });
+
+    it("lets only the restaurant fulfill, once", async () => {
+      await market.claimReward(luna, 0, lunaToken.address, 100, { from: customer });
+      await expectCustomError(market.fulfill(0, { from: customer }), "NotClaimRestaurant(uint256,address)");
+      await market.fulfill(0, { from: luna });
+      assert.equal((await market.getClaim(0)).status.toString(), "1");
+      await expectCustomError(market.fulfill(0, { from: luna }), "ClaimNotPending(uint256)");
+      await expectCustomError(market.cancel(0, { from: luna }), "ClaimNotPending(uint256)");
+      await expectCustomError(market.getClaim(7), "UnknownClaim(uint256)");
+    });
+
+    it("cancels: refunds the points and restores the stock", async () => {
+      await market.claimReward(luna, 0, lunaToken.address, 100, { from: customer });
+      await expectCustomError(market.cancel(0, { from: other }), "NotCancelAllowed(uint256,address)");
+      const tx = await market.cancel(0, { from: luna });
+      assert.equal(logOf(tx, "ClaimCancelled").args.cancelledBy, luna);
+      assert.equal(await balance(lunaToken, customer), "180");
+      assert.equal((await lunaToken.redeemedOf(customer)).toString(), "0");
+      assert.equal((await market.getRewards(luna))[0].stock.toString(), "1");
+      assert.equal((await market.getClaim(0)).status.toString(), "2");
+    });
+
+    it("only lets the market refund", async () => {
+      await expectCustomError(
+        lunaToken.refund(customer, luna, 1, { from: customer }),
+        "NotMarket(address)"
+      );
     });
   });
 });
